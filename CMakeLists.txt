@@ -13,4 +13,6 @@ conan_basic_setup(NO_OUTPUT_DIRS)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CONAN_CMAKE_MODULE_PATH} ${CMAKE_MODULE_PATH})
 
 find_package(Particle)
-add_particle_remote_app(firmware)
+include(DS18B20)
+
+add_particle_remote_app(firmware OneWire DS18B20)
