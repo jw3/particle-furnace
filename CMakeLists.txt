@@ -15,5 +15,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CONAN_CMAKE_MODULE_PATH} ${CMA
 find_package(Particle)
 include(DS18B20)
 
+add_subdirectory(firmware)
+
 include_directories(eventbus)
-add_particle_remote_app(firmware OneWire DS18B20)
+add_particle_remote_app(firmware OneWire DS18B20 fsm)
