@@ -11,10 +11,20 @@ struct Buffer
       add(t);
    }
 
-   int add(const T& t) {
+   template<class... A>
+   int add(A&& ... args) {
+      return add(Time.now(), std::forward<A>(args)...);
+   }
+
+   template<class... A>
+   int add(time_t t, A&& ... args) {
       bool full = sz + 1 >= max;
       if(full) buff.pop_front(); else ++sz;
-      buff.push_back(std::make_pair(t, Time.now()));
+      buff.push_back(
+            std::make_pair(
+                  T(std::forward<A>(args)...), t
+            )
+      );
       return full ? -1 : buff.size();
    }
 
