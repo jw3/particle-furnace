@@ -1,6 +1,7 @@
 #pragma once
 
 #include <experimental/optional>
+#include "config.hpp"
 
 class TempRead;
 
@@ -20,12 +21,12 @@ struct Behavior
 
 struct Idle : public Behavior
 {
-   Idle(uint8_t low, uint8_t high) : low(low), high(high) {};
+   Idle(ConfigRef cfg) : cfg(cfg) {};
 
    OptBehavior operator()(const TempRead& temp, system_tick_t tick) override;
 
 private:
-   uint8_t low, high;
+   ConfigRef cfg;
 };
 
 struct Blowing : public Behavior
@@ -33,13 +34,14 @@ struct Blowing : public Behavior
    using OptTemp = std::experimental::optional<uint8_t>;
    using OptTick = std::experimental::optional<system_tick_t>;
 
-   Blowing(uint8_t temp) : tempOff(temp) {};
-   Blowing(system_tick_t time) : tickOff(time) {};
+   Blowing(uint8_t temp, ConfigRef cfg) : tempOff(temp), cfg(cfg) {};
+   Blowing(system_tick_t time, ConfigRef cfg) : tickOff(time), cfg(cfg) {};
 
    OptBehavior operator()(const TempRead& temp, system_tick_t tick) override;
 
 private:
    OptTemp tempOff;
    OptTick tickOff;
+   ConfigRef cfg;
 };
 

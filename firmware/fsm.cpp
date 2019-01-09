@@ -6,15 +6,15 @@
 
 
 Behavior::OptBehavior Idle::operator()(const TempRead& temp, uint32_t tick) {
-   if(temp.value() <= low)
-      return Blowing(high);
+   if(temp.value() <= cfg.low())
+      return Blowing(cfg.high(), cfg);
    return std::move(*this);
 }
 
 Behavior::OptBehavior Blowing::operator()(const TempRead& temp, uint32_t tick) {
    if(tempOff && tempOff.value() >= temp.value())
-      return Idle(0, 0);
+      return Idle(cfg);
    if(millis() > tickOff)
-      return Idle(0, 0);
+      return Idle(cfg);
    return SameBehavior;
 }
