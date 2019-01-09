@@ -3,5 +3,8 @@
   OneWire/0.1.0@jw3/stable
   DS18B20/0.1.0@jw3/stable
 
+[build_requires]
+  Catch2/2.5.0@catchorg/stable
+
 [generators]
   cmake
