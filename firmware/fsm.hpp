@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <experimental/optional>
 #include "config.hpp"
+
 
 class TempRead;
 
@@ -17,31 +19,77 @@ struct Behavior
    virtual OptBehavior operator()(const TempRead&, system_tick_t) {
       return SameBehavior;
    };
-};
 
-struct Idle : public Behavior
-{
-   Idle(ConfigRef cfg) : cfg(cfg) {};
+   template<class T, class... A>
+   OptBehavior become(A&& ... args) {
+      T t(std::forward<A>(args)...);
+      t.cfg(*config);
+      return std::move(t);
+   }
 
-   OptBehavior operator()(const TempRead& temp, system_tick_t tick) override;
+protected:
+   Behavior() = default;
+   ConfigRef cfg() {
+      assert(config);
+      return *config;
+   }
+   void cfg(ConfigRef c) {}
 
 private:
-   ConfigRef cfg;
+   Config* config = nullptr;
 };
 
+/*
+ *
+ */
+struct Initializing : public Behavior
+{
+   explicit Initializing(ConfigRef c) { cfg(c); }
+   OptBehavior operator()(const TempRead&, system_tick_t) override;
+};
+
+/*
+ *
+ */
+struct Idle : public Behavior
+{
+   OptBehavior operator()(const TempRead&, system_tick_t) override;
+};
+
+
+/*
+ *
+ */
+struct TempLow : public Behavior
+{
+   OptBehavior operator()(const TempRead&, system_tick_t) override;
+};
+
+
+/*
+ *
+ */
+struct TempHigh : public Behavior
+{
+   OptBehavior operator()(const TempRead&, system_tick_t) override;
+};
+
+
+/*
+ *
+ */
 struct Blowing : public Behavior
 {
    using OptTemp = std::experimental::optional<uint8_t>;
    using OptTick = std::experimental::optional<system_tick_t>;
 
-   Blowing(uint8_t temp, ConfigRef cfg) : tempOff(temp), cfg(cfg) {};
-   Blowing(system_tick_t time, ConfigRef cfg) : tickOff(time), cfg(cfg) {};
+   explicit Blowing(uint8_t temp) : tempOff(temp) {};
+   explicit Blowing(system_tick_t time) : tickOff(time) {};
 
    OptBehavior operator()(const TempRead& temp, system_tick_t tick) override;
 
 private:
    OptTemp tempOff;
    OptTick tickOff;
-   ConfigRef cfg;
 };
 

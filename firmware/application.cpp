@@ -17,7 +17,7 @@ TempBufferPtr buffer = std::make_unique<TempBuffer>(100);
 ConfigPtr config = std::make_unique<Config>();
 Config& cfgRef = *config;
 
-Behavior::OptBehavior current = Idle(cfgRef);
+Behavior::OptBehavior current = Initializing(cfgRef);
 
 bool ready(system_tick_t now, ConfigRef cfg) {
    return now - cfg.lastTick() > cfg.interval();
