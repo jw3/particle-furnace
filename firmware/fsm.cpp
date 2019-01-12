@@ -32,7 +32,7 @@ void TempHigh::enter() {
 BX Blowing::operator()(const TempRead& temp, uint32_t tick) {
    if(tempOff && tempOff.value() >= temp.value())
       return become<TempHigh>();
-   if(tick > tickOff)
+   if(tickOff && tick > tickOff.value())
       return become<TempHigh>();
    return SameBehavior;
 }
