@@ -3,7 +3,7 @@
 #include <spark-dallas-temperature.h>
 
 #include <db.hpp>
-#include <fsm.hpp>
+#include <states.hpp>
 #include <config.hpp>
 #include <events.hpp>
 

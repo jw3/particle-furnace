@@ -18,4 +18,4 @@ include(DS18B20)
 add_subdirectory(firmware)
 
 include_directories(eventbus)
-add_particle_remote_app(firmware OneWire DS18B20 fsm)
+add_particle_remote_app(firmware OneWire DS18B20 states)
