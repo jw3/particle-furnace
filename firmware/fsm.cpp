@@ -2,35 +2,38 @@
 #include <events.hpp>
 #include <stdint.h>
 
-using B=Behavior::OptBehavior;
+#include <spark_wiring.h>
 
-B Initializing::operator()(const TempRead& temp, uint32_t tick) {
+
+BX Initializing::operator()(const TempRead& temp, uint32_t tick) {
    return become<Idle>();
 }
 
-B Idle::operator()(const TempRead& temp, uint32_t tick) {
+BX Idle::operator()(const TempRead& temp, uint32_t tick) {
    if(temp.value() <= cfg().low())
       return become<TempLow>();
    return SameBehavior;
 }
 
-B TempLow::operator()(const TempRead& temp, uint32_t tick) {
+BX TempLow::operator()(const TempRead& temp, uint32_t tick) {
    if(temp.value() <= cfg().low())
       return become<Blowing>(cfg().high());
    return SameBehavior;
 }
 
-B TempHigh::operator()(const TempRead& temp, uint32_t tick) {
-   if(temp.value() <= cfg().low())
-      return become<Idle>();
-   return SameBehavior;
+void TempLow::enter() {
+   digitalWrite(cfg().blowerPin(), 1);
 }
 
-B Blowing::operator()(const TempRead& temp, uint32_t tick) {
+void TempHigh::enter() {
+   digitalWrite(cfg().blowerPin(), 0);
+}
+
+BX Blowing::operator()(const TempRead& temp, uint32_t tick) {
    if(tempOff && tempOff.value() >= temp.value())
-      return become<Idle>();
+      return become<TempHigh>();
    if(tick > tickOff)
-      return become<Idle>();
+      return become<TempHigh>();
    return SameBehavior;
 }
 

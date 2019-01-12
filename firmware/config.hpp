@@ -17,7 +17,7 @@ struct Config
    system_tick_t interval() const { return s.interval; }
    void interval(system_tick_t t) { s.interval = t; }
 
-   pin_t blowerPin() { return s.blowerPin; }
+   pin_t blowerPin() const { return s.blowerPin; }
    void blowerPin(pin_t p) { s.blowerPin = p; }
 
 private:

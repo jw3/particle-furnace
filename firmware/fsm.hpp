@@ -20,10 +20,15 @@ struct Behavior
       return SameBehavior;
    };
 
+   virtual void enter() {}
+   virtual void exit() {}
+
    template<class T, class... A>
    OptBehavior become(A&& ... args) {
       T t(std::forward<A>(args)...);
       t.cfg(*config);
+      exit();
+      t.enter();
       return std::move(t);
    }
 
@@ -38,6 +43,7 @@ protected:
 private:
    Config* config = nullptr;
 };
+using BX=Behavior::OptBehavior;
 
 /*
  *
@@ -45,7 +51,7 @@ private:
 struct Initializing : public Behavior
 {
    explicit Initializing(ConfigRef c) { cfg(c); }
-   OptBehavior operator()(const TempRead&, system_tick_t) override;
+   BX operator()(const TempRead&, system_tick_t) override;
 };
 
 /*
@@ -53,7 +59,7 @@ struct Initializing : public Behavior
  */
 struct Idle : public Behavior
 {
-   OptBehavior operator()(const TempRead&, system_tick_t) override;
+   BX operator()(const TempRead&, system_tick_t) override;
 };
 
 
@@ -62,7 +68,8 @@ struct Idle : public Behavior
  */
 struct TempLow : public Behavior
 {
-   OptBehavior operator()(const TempRead&, system_tick_t) override;
+   BX operator()(const TempRead&, system_tick_t) override;
+   void enter() override;
 };
 
 
@@ -71,7 +78,8 @@ struct TempLow : public Behavior
  */
 struct TempHigh : public Behavior
 {
-   OptBehavior operator()(const TempRead&, system_tick_t) override;
+   BX operator()(const TempRead&, system_tick_t) override { return become<Idle>(); }
+   void enter() override;
 };
 
 
