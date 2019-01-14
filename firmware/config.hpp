@@ -3,7 +3,7 @@
 #include <memory>
 #include <pinmap_hal.h>
 
-struct Config
+struct Cfg : public Config
 {
    uint8_t high() const { return s.high; }
    void high(uint8_t high) { s.high = high; }
@@ -32,5 +32,4 @@ private:
    };
    Settings s;
 };
-using ConfigPtr = std::unique_ptr<Config>;
-using ConfigRef = const Config&;
+using CfgRef = Cfg&;

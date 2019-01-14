@@ -3,6 +3,7 @@
 #include <spark-dallas-temperature.h>
 
 #include <db.hpp>
+#include <fsm.hpp>
 #include <states.hpp>
 #include <config.hpp>
 #include <events.hpp>
@@ -14,12 +15,12 @@ OneWire w1(D4);
 DallasTemperature sensor(&w1);
 
 TempBufferPtr buffer = std::make_unique<TempBuffer>(100);
-ConfigPtr config = std::make_unique<Config>();
-Config& cfgRef = *config;
+auto config = std::make_unique<Cfg>();
+CfgRef cfgRef = *config;
 
-Behavior::OptBehavior current = Initializing(cfgRef);
+OptB current = std::make_shared<Initializing>(cfgRef);
 
-bool ready(system_tick_t now, ConfigRef cfg) {
+bool ready(system_tick_t now, CfgRef cfg) {
    return now - cfg.lastTick() > cfg.interval();
 }
 
@@ -33,9 +34,8 @@ void loop() {
       const auto val = sensor.getTempFByIndex(0);
       const system_tick_t t = millis();
       if(val != DEVICE_DISCONNECTED_F) {
-         auto Fn = *current; // cant be inlined below in gcc-5
-         if(auto next = Fn(static_cast<uint8_t>(val), t))
-            current = next;
+         S state{static_cast<uint8_t>(val), t};
+         current = (*current)(state);
       }
       buffer->add(Time.now(), val);
       cfgRef.lastTick(t);
