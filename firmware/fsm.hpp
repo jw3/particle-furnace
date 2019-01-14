@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <cassert>
 
 struct State {};
 struct Config {};
@@ -34,7 +33,6 @@ struct Behavior : std::enable_shared_from_this<Behavior<C, S>>
 protected:
    Behavior() = default;
    const C& cfg() {
-      assert(config);
       return *config;
    }
    void cfg(const C& c) { config = &c; }
