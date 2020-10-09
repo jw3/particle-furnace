@@ -18,6 +18,18 @@ using StateRef = S&;
 using B = Behavior<Cfg, S>;
 using OptB = std::shared_ptr<B>;
 
+struct SwitchAccessory : public Operation<Cfg, S>
+{
+   SwitchAccessory(OptB& caller, bool state) : Operation(caller), state(state) {}
+
+   void exec(S& s) override {
+
+   }
+
+private:
+   bool state;
+};
+
 /*
  *
  */

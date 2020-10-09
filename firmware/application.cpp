@@ -8,36 +8,66 @@
 #include <config.hpp>
 #include <events.hpp>
 
-using TempBuffer = Buffer<TempRead>;
-using TempBufferPtr = std::unique_ptr<TempBuffer>;
 
-OneWire w1(D4);
-DallasTemperature sensor(&w1);
+auto w1 = std::make_unique<OneWire>(D4);
+auto sensor = std::make_unique<DallasTemperature>(w1.get());
 
-TempBufferPtr buffer = std::make_unique<TempBuffer>(100);
-auto config = std::make_unique<Cfg>();
-CfgRef cfgRef = *config;
+auto buffer = std::make_unique<Buffer<TempRead>>(100);
+auto config = std::make_unique<Cfg>(*sensor);
 
-OptB current = std::make_shared<Initializing>(cfgRef);
+// states
+struct IdleX {};
+struct HeatingToTemp {};
+struct HeatingUntil {};
+
+// events
+struct TempReading {
+   TempReading(uint8_t temp, system_tick_t tick) : temp(temp), tick(tick) {}
+   const uint8_t temp;
+   const system_tick_t tick;
+};
+struct CancelAndShutoff {};
+struct RunForSomeDuration {};
+struct RunUntilSomeTemp {};
+
+using state = std::variant<IdleX, HeatingToTemp, HeatingUntil>;
+
+struct FSM : fsm<FSM, state>
+{
+   template<typename State, typename Event>
+   auto on_event(State&, const Event&) { return std::nullopt; }
+
+   template<typename State>
+   auto on_event(State&, const TempReading& r) {
+       return r.temp > 200 ?    std::make_optional(IdleX()) : std::nullopt;
+   }
+
+   auto on_event(IdleX&, const RunForSomeDuration&) { return HeatingToTemp(); }
+   auto on_event(IdleX&, const RunUntilSomeTemp&) { return HeatingUntil(); }
+
+   auto on_event(HeatingToTemp&, const CancelAndShutoff&) { return IdleX(); }
+};
+
 
 bool ready(system_tick_t now, CfgRef cfg) {
    return now - cfg.lastTick() > cfg.interval();
 }
 
 void setup() {
-   sensor.begin();
+   sensor->begin();
 }
 
+FSM s;
+
 void loop() {
-   if(ready(millis(), cfgRef)) {
-      sensor.requestTemperatures();
-      const auto val = sensor.getTempFByIndex(0);
+   if(ready(millis(), *config)) {
+      sensor->requestTemperatures();
+      const auto val = sensor->getTempFByIndex(0);
       const system_tick_t t = millis();
       if(val != DEVICE_DISCONNECTED_F) {
-         S state{static_cast<uint8_t>(val), t};
-         current = (*current)(state);
+         s.handle(TempReading(static_cast<uint8_t>(val), t));
       }
       buffer->add(Time.now(), val);
-      cfgRef.lastTick(t);
+      config->lastTick(t);
    }
 }
