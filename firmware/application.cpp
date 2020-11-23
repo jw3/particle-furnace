@@ -9,11 +9,11 @@
 #include <events.hpp>
 
 
-auto w1 = std::make_unique<OneWire>(D4);
-auto sensor = std::make_unique<DallasTemperature>(w1.get());
+auto w1 = OneWire(D4);
+auto sensor = DallasTemperature(&w1);
 
-auto buffer = std::make_unique<Buffer<TempRead>>(100);
-auto config = std::make_unique<Cfg>(*sensor);
+auto buffer = Buffer<TempRead>(100);
+auto config = Cfg(*sensor);
 
 // states
 struct IdleX {};
@@ -54,20 +54,20 @@ bool ready(system_tick_t now, CfgRef cfg) {
 }
 
 void setup() {
-   sensor->begin();
+   sensor.begin();
 }
 
 FSM s;
 
 void loop() {
    if(ready(millis(), *config)) {
-      sensor->requestTemperatures();
-      const auto val = sensor->getTempFByIndex(0);
+      sensor.requestTemperatures();
+      const auto val = sensor.getTempFByIndex(0);
       const system_tick_t t = millis();
       if(val != DEVICE_DISCONNECTED_F) {
          s.handle(TempReading(static_cast<uint8_t>(val), t));
       }
-      buffer->add(Time.now(), val);
-      config->lastTick(t);
+      buffer.add(Time.now(), val);
+      config.lastTick(t);
    }
 }
